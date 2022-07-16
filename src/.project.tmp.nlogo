@@ -7,7 +7,7 @@ globals
   phase                    ;; keeps track of the phase
   num-cars-stopped         ;; the number of cars that are stopped during a single pass thru the go procedure
   current-intersection     ;; the currently selected intersection
-
+  spawned-cars
   ;; patch agentsets
   intersections ;; agentset containing the patches that are intersections
   roads         ;; agentset containing the patches that are roads
@@ -46,7 +46,6 @@ patches-own
 ;; Create num-cars of turtles if there are enough road patches for one turtle to
 ;; be created per road patch.
 to setup
-
   clear-all
   setup-globals
   setup-patches  ;; ask the patches to draw themselves and set up a few variables
@@ -64,21 +63,6 @@ to setup
     stop
   ]
 
-  ;; Now create the cars and have each created car call the functions setup-cars and set-car-color
-  create-turtles num-cars [
-    setup-cars
-    record-data
-    set house one-of intersections with [id = 3]
-    set work one-of intersections with [ id = 23 ]
-    set goal work
-    move-to house
-    print goal
-    print work
-    print house
-  ]
-
-  ;; give the turtles an initial speed
-  ask turtles [ set-car-speed ]
   reset-ticks
 end
 
@@ -89,8 +73,8 @@ to setup-globals
   set num-cars-stopped 0
   set grid-x-inc world-width / grid-size-x
   set grid-y-inc world-height / grid-size-y
+  set spawned-cars 0
 
-  ;; don't make acceleration 0.1 since we could get a rounding error and end up on a patch boundary
   set acceleration 0.099
 end
 
@@ -170,6 +154,25 @@ end
 
 ;; Run the simulation
 to go
+  if spawned-cars < num-cars[
+    create-turtles 1 [
+      setup-cars
+      record-data
+      set house one-of intersections with [id = 3]
+      set work one-of intersections with [ id = 23 ]
+      set goal work
+      move-to house
+      print goal
+      print work
+      print house
+      set-car-speed
+      set spawned-cars spawned-cars + 1
+    ]
+  ]
+  print spawned-cars
+  if spawned-cars > 0 [
+
+
   set num-cars-stopped 0
   ask turtles [
     face next-patch
@@ -177,11 +180,11 @@ to go
       die
     ]
     set-car-speed
-    fd speed
+      fd speed
   ]
   next-phase ;; update the phase and the global clock
   tick
-
+  ]
 end
 
 
@@ -227,14 +230,14 @@ end
 to slow-down  ;; turtle procedure
   ifelse speed <= 0
     [ set speed 0 ]
-    [ set speed speed - acceleration ]
+    [ set speed
 end
 
 ;; increase the speed of the car
 to speed-up  ;; turtle procedure
   ifelse speed > speed-limit
     [ set speed speed-limit ]
-    [ set speed speed + acceleration ]
+    [ set speed random-float 1 + acceleration ]
 end
 
 
@@ -289,8 +292,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -18
 18
@@ -388,7 +391,7 @@ num-cars
 num-cars
 1
 400
-1.0
+35.0
 1
 1
 NIL
