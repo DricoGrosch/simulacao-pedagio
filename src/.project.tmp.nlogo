@@ -8,14 +8,19 @@ globals
   num-cars-stopped         ;; the number of cars that are stopped during a single pass thru the go procedure
   current-intersection     ;; the currently selected intersection
   spawned-cars
+  hour-of-the-day
   ;; patch agentsets
   intersections ;; agentset containing the patches that are intersections
-  roads         ;; agentset containing the patches that are roads
+  roads
+  current-house
+  current-work
+  must-end-simulation
 ]
 
 turtles-own
 [
   speed     ;; the speed of the turtle
+  speed-capacity
   up-car?   ;; true if the turtle moves downwards and false if it moves to the right
   wait-time ;; the amount of time since the last time a turtle has moved
   work      ;; the patch where they work
@@ -32,7 +37,6 @@ patches-own
                   ;; world.  -1 for non-intersection patches.
   my-column       ;; the column of the intersection counting from the upper left corner of the
                   ;; world.  -1 for non-intersection patches.
-  my-phase        ;; the phase for the intersection.  -1 for non-intersection patches.
   auto?           ;; whether or not this intersection will switch automatically.
   id
 ]
@@ -48,21 +52,8 @@ patches-own
 to setup
   clear-all
   setup-globals
-  setup-patches  ;; ask the patches to draw themselves and set up a few variables
-
- set-default-shape turtles "car"
-
-  if (num-cars > count roads) [
-    user-message (word
-      "There are too many cars for the amount of "
-      "road.  Either increase the amount of roads "
-      "by increasing the GRID-SIZE-X or "
-      "GRID-SIZE-Y sliders, or decrease the "
-      "number of cars by lowering the NUM-CAR slider.\n"
-      "The setup has stopped.")
-    stop
-  ]
-
+  setup-patches
+  set-default-shape turtles "car"
   reset-ticks
 end
 
@@ -74,12 +65,17 @@ to setup-globals
   set grid-x-inc world-width / grid-size-x
   set grid-y-inc world-height / grid-size-y
   set spawned-cars 0
-
+  set hour-of-the-day 8
   set acceleration 0.099
+  set must-end-simulation false
 end
 
-;; Make the patches have appropriate colors, set up the roads and intersections agentsets,
-;; and initialize the traffic lights to one setting
+to create-car-route
+  set current-house one-of intersections
+  set current-work one-of intersections with [self !=  current-house ]
+end
+
+
 to setup-patches
   ;; initialize the patch-owned variables and color the patches to a base-color
   ask patches [
@@ -88,7 +84,6 @@ to setup-patches
     set green-light-up? true
     set my-row -1
     set my-column -1
-    set my-phase -1
     set pcolor brown + 3
   ]
 
@@ -115,12 +110,10 @@ to setup-intersections
     ask intersection [
       set intersection? true
       set green-light-up? true
-      set my-phase 0
       set auto? true
       set my-row floor ((pycor + max-pycor) / grid-y-inc)
       set my-column floor ((pxcor + max-pxcor) / grid-x-inc)
       set id index
-
       set pcolor blue
       set index index + 1
     ]
@@ -148,18 +141,28 @@ end
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;
-;; Runtime Procedures ;;
-;;;;;;;;;;;;;;;;;;;;;;;;
+to start-new-demand
+  set hour-of-the-day hour-of-the-day + 1
+  set spawned-cars 0
+  create-car-route
+  set current-house one-of intersections
+  set current-work one-of intersections with [self !=  current-house ]
+end
 
-;; Run the simulation
 to go
-  if spawned-cars < num-cars[
+  if is-new-hour[
+    start-new-demand
+  ]
+
+  if must-end-simulation [stop]
+
+
+  if spawned-cars < num-cars and hour-of-the-day <[
     create-turtles 1 [
       setup-cars
       record-data
-      set house one-of intersections with [id = 3]
-      set work one-of intersections with [ id = 23 ]
+      set work current-work
+      set house current-house
       set goal work
       move-to house
       print goal
@@ -167,11 +170,9 @@ to go
       print house
       set-car-speed
       set spawned-cars spawned-cars + 1
+      set speed-capacity random-float 1
     ]
   ]
-  print spawned-cars
-  if spawned-cars > 0 [
-
 
   set num-cars-stopped 0
   ask turtles [
@@ -179,19 +180,25 @@ to go
     if  distance [ goal ] of self < 1[
       die
     ]
-    set-car-speed
-      fd speed
+    car-following
   ]
-  next-phase ;; update the phase and the global clock
-  tick
-  ]
-end
+  if count turtles = 0[set must-end-simulation true]
 
+
+  tick
+
+end
+to-report is-new-hour
+  report ticks mod 60 = 0
+end
+to car-following
+  set-car-speed
+  fd speed
+end
 
 
 ;; update the variables for the current intersection
 to update-variables ;; patch procedure
-  set my-phase current-phase
   set auto? current-auto?
 end
 
@@ -212,8 +219,6 @@ to set-speed [ delta-x delta-y ]  ;; turtle procedure
   ;; get the turtles on the patch in front of the turtle
   let turtles-ahead turtles-at delta-x delta-y
 
-  ;; if there are turtles in front of the turtle, slow down
-  ;; otherwise, speed up
   ifelse any? turtles-ahead [
     ifelse any? (turtles-ahead with [ up-car? != [ up-car? ] of myself ]) [
       set speed 0
@@ -230,14 +235,14 @@ end
 to slow-down  ;; turtle procedure
   ifelse speed <= 0
     [ set speed 0 ]
-    [ set speed
+    [ set speed speed - acceleration ]
 end
 
 ;; increase the speed of the car
 to speed-up  ;; turtle procedure
   ifelse speed > speed-limit
     [ set speed speed-limit ]
-    [ set speed random-float 1 + acceleration ]
+    [ set speed  speed + acceleration ]
 end
 
 
@@ -252,31 +257,12 @@ to record-data  ;; turtle procedure
 end
 
 
-to next-phase
-  set phase phase + 1
-end
-
 ;; establish goal of driver (house or work) and move to next patch along the way
 to-report next-patch
   let choices neighbors with [ pcolor = white or pcolor = blue or pcolor = red ]
   let choice min-one-of choices [ distance [ goal ] of myself ]
   report choice
 end
-
-
-
-to label-subject
-  if subject != nobody [
-    ask subject [
-      if goal = house [ set label "house" ]
-      if goal = work [ set label "work" ]
-    ]
-  ]
-end
-
-
-; Copyright 2008 Uri Wilensky.
-; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
 327
@@ -391,7 +377,7 @@ num-cars
 num-cars
 1
 400
-35.0
+91.0
 1
 1
 NIL
@@ -469,8 +455,8 @@ MONITOR
 125
 290
 170
-Current Phase
-phase
+Hour of the day
+hour-of-the-day
 3
 1
 11
@@ -484,7 +470,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-20.0
+19.0
 1
 1
 NIL
@@ -499,7 +485,7 @@ current-phase
 current-phase
 0
 99
-0.0
+10.0
 1
 1
 %
