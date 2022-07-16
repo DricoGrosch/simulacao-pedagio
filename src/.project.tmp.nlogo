@@ -34,7 +34,7 @@ patches-own
                   ;; world.  -1 for non-intersection patches.
   my-phase        ;; the phase for the intersection.  -1 for non-intersection patches.
   auto?           ;; whether or not this intersection will switch automatically.
-                  ;; false for non-intersection patches.
+  id
 ]
 
 
@@ -68,18 +68,17 @@ to setup
   create-turtles num-cars [
     setup-cars
     record-data
-    ;; choose at random a location for the house
-    set house one-of intersections
-    ;; choose at random a location for work, make sure work is not located at same location as house
-    set work one-of intersections with [ self != [ house ] of myself ]
+    set house one-of intersections with [id = 3]
+    set work one-of intersections with [ id = 23 ]
     set goal work
+    move-to house
+    print goal
+    print work
+    print house
   ]
 
   ;; give the turtles an initial speed
   ask turtles [ set-car-speed ]
-  ask intersections[
-  set pcolor blue
-  ]
   reset-ticks
 end
 
@@ -127,14 +126,20 @@ end
 ;; patch variables.  Make all the traffic lights start off so that the lights are red
 ;; horizontally and green vertically.
 to setup-intersections
-  ask intersections [
-    set intersection? true
-    set green-light-up? true
-    set my-phase 0
-    set auto? true
-    set my-row floor ((pycor + max-pycor) / grid-y-inc)
-    set my-column floor ((pxcor + max-pxcor) / grid-x-inc)
+  let index 1
+  foreach sort intersections [intersection ->
+    ask intersection [
+      set intersection? true
+      set green-light-up? true
+      set my-phase 0
+      set auto? true
+      set my-row floor ((pycor + max-pycor) / grid-y-inc)
+      set my-column floor ((pxcor + max-pxcor) / grid-x-inc)
+      set id index
 
+      set pcolor blue
+      set index index + 1
+    ]
   ]
 end
 
@@ -142,7 +147,6 @@ end
 to setup-cars  ;; turtle procedure
   set speed 0
   set wait-time 0
-  put-on-empty-road
   ifelse intersection? [
     ifelse random 2 = 0
       [ set up-car? true ]
@@ -158,10 +162,6 @@ to setup-cars  ;; turtle procedure
     [ set heading 90 ]
 end
 
-;; Find a road patch without any turtles on it and place the turtle there.
-to put-on-empty-road  ;; turtle procedure
-  move-to one-of intersections
-end
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -170,22 +170,12 @@ end
 
 ;; Run the simulation
 to go
-
-
   set num-cars-stopped 0
-
-  ;; set the cars’ speed, move them forward their speed, record data for plotting,
-  ;; and set the color of the cars to an appropriate color based on their speed
   ask turtles [
     face next-patch
-
-
-    if  [distance [ goal ]] < 1 [
-    print "sads
+    if  distance [ goal ] of self < 1[
+      die
     ]
-
-
-
     set-car-speed
     fd speed
   ]
@@ -260,14 +250,12 @@ end
 
 
 to next-phase
-
   set phase phase + 1
-
 end
 
 ;; establish goal of driver (house or work) and move to next patch along the way
 to-report next-patch
-  let choices neighbors with [ pcolor = white or pcolor = red or pcolor = green ]
+  let choices neighbors with [ pcolor = white or pcolor = blue or pcolor = red ]
   let choice min-one-of choices [ distance [ goal ] of myself ]
   report choice
 end
@@ -387,7 +375,7 @@ SWITCH
 118
 power?
 power?
-1
+0
 1
 -1000
 
