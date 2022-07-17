@@ -173,14 +173,8 @@ end
 to go
   if is-new-hour[
     start-new-demand
-
   ]
-
   if must-end-simulation [stop]
-
-
-
-
   set num-cars-stopped 0
   ask turtles [
     face next-patch
@@ -384,7 +378,7 @@ num-cars
 num-cars
 1
 400
-99.0
+305.0
 1
 1
 NIL
@@ -492,7 +486,7 @@ current-phase
 current-phase
 0
 99
-10.0
+0.0
 1
 1
 %
