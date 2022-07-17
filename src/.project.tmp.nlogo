@@ -9,8 +9,8 @@ globals
   current-intersection     ;; the currently selected intersection
   spawned-cars
   hour-of-the-day
-  ;; patch agentsets
-  intersections ;; agentset containing the patches that are intersections
+  intersections
+  demand-routes
   roads
   current-house
   current-work
@@ -70,10 +70,6 @@ to setup-globals
   set must-end-simulation false
 end
 
-to create-car-route
-  set current-house one-of intersections
-  set current-work one-of intersections with [self !=  current-house ]
-end
 
 
 to setup-patches
@@ -101,9 +97,6 @@ to setup-patches
   setup-intersections
 end
 
-;; Give the intersections appropriate values for the intersection?, my-row, and my-column
-;; patch variables.  Make all the traffic lights start off so that the lights are red
-;; horizontally and green vertically.
 to setup-intersections
   let index 1
   foreach sort intersections [intersection ->
@@ -140,39 +133,52 @@ to setup-cars  ;; turtle procedure
 end
 
 
+to create-demand-routes
+  let new-routes (list)
 
+  repeat ((count intersections * 2) / 3 ) [
+    let temp1 one-of intersections
+    let temp2 one-of intersections with [ self != temp1]
+
+    set new-routes lput (list temp1 temp2) new-routes
+
+  ]
+  set demand-routes new-routes
+
+
+
+
+
+end
 to start-new-demand
   set hour-of-the-day hour-of-the-day + 1
   set spawned-cars 0
-  create-car-route
-  set current-house one-of intersections
-  set current-work one-of intersections with [self !=  current-house ]
-end
-
-to go
-  if is-new-hour[
-    start-new-demand
-  ]
-
-  if must-end-simulation [stop]
-
-
-  if spawned-cars < num-cars and hour-of-the-day <[
-    create-turtles 1 [
+  create-demand-routes
+  if hour-of-the-day <= 18[
+    create-turtles num-cars [
+      let route one-of demand-routes
       setup-cars
       record-data
-      set work current-work
-      set house current-house
+      set house first route
+      set work last route
       set goal work
       move-to house
-      print goal
-      print work
-      print house
       set-car-speed
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 1
     ]
   ]
+end
+
+to go
+  if is-new-hour[
+    start-new-demand
+
+  ]
+
+  if must-end-simulation [stop]
+
+
 
   set num-cars-stopped 0
   ask turtles [
@@ -351,7 +357,7 @@ grid-size-x
 grid-size-x
 1
 9
-5.0
+4.0
 1
 1
 NIL
@@ -377,7 +383,7 @@ num-cars
 num-cars
 1
 400
-91.0
+305.0
 1
 1
 NIL
@@ -444,7 +450,7 @@ speed-limit
 speed-limit
 0.1
 1
-1.0
+0.8
 0.1
 1
 NIL
@@ -470,7 +476,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-19.0
+23.0
 1
 1
 NIL
