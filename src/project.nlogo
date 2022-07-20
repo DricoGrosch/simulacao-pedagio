@@ -77,7 +77,7 @@ to setup-patches
   ask patches [
     set intersection? false
     set auto? false
-    set green-light-up? true
+    set green-light-up? false
     set my-row -1
     set my-column -1
     set pcolor brown + 3
@@ -93,7 +93,51 @@ to setup-patches
     (floor ((pycor + max-pycor) mod grid-y-inc) = 0)
   ]
 
-  ask roads [ set pcolor white ]
+  ask roads [
+    ask patch -9 -3 [ set pcolor brown + 3 ]
+    ask patch -8 -3 [ set pcolor brown + 3 ]
+    ask patch -7 -3 [ set pcolor brown + 3 ]
+    ask patch -6 -3 [ set pcolor brown + 3 ]
+    ask patch -5 -3 [ set pcolor brown + 3 ]
+    ask patch -4 -3 [ set pcolor brown + 3 ]
+    ask patch -3 -3 [ set pcolor brown + 3 ]
+    ask patch -2 -3 [ set pcolor brown + 3 ]
+    ask patch -1 -3 [ set pcolor brown + 3 ]
+
+
+    ask patch 8 5 [ set pcolor brown + 3 ]
+    ask patch 7 5 [ set pcolor brown + 3 ]
+    ask patch 6 5 [ set pcolor brown + 3 ]
+    ask patch 5 5 [ set pcolor brown + 3 ]
+    ask patch 4 5 [ set pcolor brown + 3 ]
+    ask patch 3 5 [ set pcolor brown + 3 ]
+    ask patch 2 5 [ set pcolor brown + 3 ]
+    ask patch 1 5 [ set pcolor brown + 3 ]
+    set pcolor white
+    if pxcor = 9 and pycor = 1[
+      set pcolor red
+    ]
+    if pxcor = -5 and pycor = 5[
+      set pcolor red
+    ]
+
+
+
+
+    ;if pxcor = -9 ate -1[
+     ;if pycor = -3[
+
+
+    ;if pxcor = 1 ate 8[
+    ;if pycor = 5 [
+
+
+
+
+    ;set plabel pycor
+    ;print(pxcor)
+    ;print(pycor)
+  ]
   setup-intersections
 end
 
@@ -165,7 +209,7 @@ to start-new-demand
       move-to house
       set-car-speed
       set spawned-cars spawned-cars + 1
-      set speed-capacity random-float 1
+      set speed-capacity random-float 0.7 + 0.3
     ]
   ]
 end
@@ -174,23 +218,33 @@ to go
   if is-new-hour[
     start-new-demand
   ]
-  if must-end-simulation [stop]
+;  print count turtles
   set num-cars-stopped 0
+
   ask turtles [
     face next-patch
-    if  distance [ goal ] of self < 1[
+    if  distance [ goal ] of self < 2[
+
       die
+
     ]
+
+      if hour-of-the-day > 240[
+      print distance [ goal ] of self
+      ]
+
+
+
     car-following
   ]
-  if count turtles = 0[set must-end-simulation true]
-
+  if count turtles = 0 and hour-of-the-day > 18 [set must-end-simulation true]
+  if must-end-simulation [stop]
 
   tick
 
 end
 to-report is-new-hour
-  report ticks mod 60 = 0
+  report ticks mod 120 = 0
 end
 to car-following
   set-car-speed
@@ -204,14 +258,11 @@ to update-variables ;; patch procedure
 end
 
 to set-car-speed  ;; turtle procedure
-  ifelse pcolor = red [
-    set speed 0
-  ]
-  [
+
     ifelse up-car?
-      [ set-speed 0 -1 ]
-      [ set-speed 1 0 ]
-  ]
+    [ set-speed 0 -1 ]
+    [ set-speed 1 0 ]
+
 end
 
 ;; set the speed variable of the turtle to an appropriate value (not exceeding the
@@ -220,6 +271,8 @@ to set-speed [ delta-x delta-y ]  ;; turtle procedure
   ;; get the turtles on the patch in front of the turtle
   let turtles-ahead turtles-at delta-x delta-y
 
+  ;; if there are turtles in front of the turtle, slow down
+  ;; otherwise, speed up
   ifelse any? turtles-ahead [
     ifelse any? (turtles-ahead with [ up-car? != [ up-car? ] of myself ]) [
       set speed 0
@@ -234,8 +287,8 @@ end
 
 ;; decrease the speed of the car
 to slow-down  ;; turtle procedure
-  ifelse speed <= 0
-    [ set speed 0 ]
+  ifelse speed <= 0.1
+    [ set speed 0.1 ]
     [ set speed speed - acceleration ]
 end
 
@@ -261,7 +314,13 @@ end
 ;; establish goal of driver (house or work) and move to next patch along the way
 to-report next-patch
   let choices neighbors with [ pcolor = white or pcolor = blue or pcolor = red ]
+
   let choice min-one-of choices [ distance [ goal ] of myself ]
+  ;if distance [ goal ] of self < 2 [
+
+  ;print distance [ goal ] of self
+  ;]
+
   report choice
 end
 @#$#@#$#@
@@ -378,7 +437,7 @@ num-cars
 num-cars
 1
 400
-305.0
+400.0
 1
 1
 NIL
