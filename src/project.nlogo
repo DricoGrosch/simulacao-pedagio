@@ -1,3 +1,5 @@
+extensions [ nw ]
+
 globals
 [
   grid-x-inc               ;; the amount of patches in between two roads in the x direction
@@ -9,7 +11,6 @@ globals
   current-intersection     ;; the currently selected intersection
   spawned-cars
   hour-of-the-day
-  intersections
   demand-routes
   roads
   current-house
@@ -26,6 +27,7 @@ turtles-own
   work      ;; the patch where they work
   house     ;; the patch where they live
   goal      ;; where am I currently headed
+
 ]
 
 patches-own
@@ -38,10 +40,13 @@ patches-own
   my-column       ;; the column of the intersection counting from the upper left corner of the
                   ;; world.  -1 for non-intersection patches.
   auto?           ;; whether or not this intersection will switch automatically.
-  id
 ]
+breed [intersections intersection]
+breed [nodes node]
 
-
+intersections-own[
+id
+]
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup Procedures ;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -53,7 +58,6 @@ to setup
   clear-all
   setup-globals
   setup-patches
-  set-default-shape turtles "car"
   reset-ticks
 end
 
@@ -88,10 +92,9 @@ to setup-patches
     (floor ((pxcor + max-pxcor - floor (grid-x-inc - 1)) mod grid-x-inc) = 0) or
     (floor ((pycor + max-pycor) mod grid-y-inc) = 0)
   ]
-  set intersections roads with [
-    (floor ((pxcor + max-pxcor - floor (grid-x-inc - 1)) mod grid-x-inc) = 0) and
-    (floor ((pycor + max-pycor) mod grid-y-inc) = 0)
-  ]
+
+
+
 
   ask roads [
     ask patch -9 -3 [ set pcolor brown + 3 ]
@@ -120,39 +123,37 @@ to setup-patches
     if pxcor = -5 and pycor = 5[
       set pcolor red
     ]
-
-
-
-
-    ;if pxcor = -9 ate -1[
-     ;if pycor = -3[
-
-
-    ;if pxcor = 1 ate 8[
-    ;if pycor = 5 [
-
-
-
-
-    ;set plabel pycor
-    ;print(pxcor)
-    ;print(pycor)
   ]
+  ask roads [
+    sprout-nodes 1 [
+     set size 0.5
+      set shape "circle"
+      set color grey
+    ]
+  ]
+   ask nodes [
+    create-links-with nodes-on neighbors4 [
+      set color grey
+    ]
+  ]
+
   setup-intersections
 end
 
 to setup-intersections
   let index 1
-  foreach sort intersections [intersection ->
-    ask intersection [
-      set intersection? true
-      set green-light-up? true
-      set auto? true
-      set my-row floor ((pycor + max-pycor) / grid-y-inc)
-      set my-column floor ((pxcor + max-pxcor) / grid-x-inc)
-      set id index
-      set pcolor blue
-      set index index + 1
+  let intersection-patches roads with [
+    (floor ((pxcor + max-pxcor - floor (grid-x-inc - 1)) mod grid-x-inc) = 0) and
+    (floor ((pycor + max-pycor) mod grid-y-inc) = 0)
+  ]
+  foreach sort intersection-patches[intersection-patch ->
+    ask intersection-patch  [
+      sprout-intersections 1 [
+        set size 1
+        set shape "flower"
+        set index index + 1
+        set id index
+      ]
     ]
   ]
 end
@@ -188,12 +189,8 @@ to create-demand-routes
 
   ]
   set demand-routes new-routes
-
-
-
-
-
 end
+
 to start-new-demand
   set hour-of-the-day hour-of-the-day + 1
   set spawned-cars 0
@@ -208,10 +205,31 @@ to start-new-demand
       set goal work
       move-to house
       set-car-speed
+      set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
+      create-link-with goal
+      ;-------------------------------------
+      ;let node-on-current-car-path nodes-here
+
+      ;let node-on-current-car-goal-path 0
+      ;ask goal[
+      ;set node-on-current-car-goal-path nodes-here
+      ;]
+      ;show node-on-current-car-goal-path
+      ;ask node-on-current-car-goal-path [
+      ;show nw:turtles-on-path-to node-on-current-car-path
+
+
+
+
+
+
+
+
     ]
-  ]
+ ]
+
 end
 
 to go
@@ -222,20 +240,15 @@ to go
   set num-cars-stopped 0
 
   ask turtles [
-    face next-patch
-    if  distance [ goal ] of self < 2[
+    ;car-following
 
-      die
-
-    ]
-
-      if hour-of-the-day > 240[
-      print distance [ goal ] of self
-      ]
-
-
-
-    car-following
+   ; foreach path-to-follow [
+    ;        n ->
+     ;       face n
+      ;      move-to n
+       ;     ; For visualization only
+        ;    wait 0.1
+         ; ]
   ]
   if count turtles = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [stop]
@@ -437,7 +450,7 @@ num-cars
 num-cars
 1
 400
-400.0
+1.0
 1
 1
 NIL
