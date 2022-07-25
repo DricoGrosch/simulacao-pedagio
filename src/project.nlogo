@@ -119,17 +119,22 @@ to setup-patches
     ask patch 2 5 [ set pcolor brown + 3 ]
     ask patch 1 5 [ set pcolor brown + 3 ]
     set pcolor white
+
   ]
+
+  ;
+  ;y-10
+
   ask patches with [pcolor = white] [
     sprout-nodes 1 [
      set size 0.5
       set shape "circle"
-      set color grey
+      set color white
     ]
   ]
    ask nodes [
     create-links-with nodes-on neighbors4 [
-      set color grey
+      set color white
       set weight 1
     ]
   ]
@@ -138,24 +143,34 @@ to setup-patches
 
   ask patches [
     if pxcor = 9 and pycor = 1[
-      set pcolor red
-      ask nodes-here [
-        ask my-links [
-          set weight 5
-        ]
-      ]
+      set-toll
     ]
     if pxcor = -5 and pycor = 5[
-      set pcolor red
-      ask nodes-here [
-        ask my-links [
-          set weight 5
-        ]
-      ]
+      set-toll
+    ]
+  ]
+
+  ask patches with [pycor = -10] [
+    if pxcor >= -9 and pxcor <= 8 [
+      ;set-toll
+    ]
+  ]
+  ask one-of intersections [
+    ask patch-here [
+    set-toll
     ]
   ]
 
 
+end
+
+to set-toll
+   set pcolor red
+      ask nodes-here [
+        ask my-links [
+          set weight 5
+        ]
+      ]
 end
 to setup-intersections
   let index 1
@@ -457,7 +472,7 @@ num-cars
 num-cars
 1
 400
-152.0
+310.0
 1
 1
 NIL
