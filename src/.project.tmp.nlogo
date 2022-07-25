@@ -130,7 +130,7 @@ to setup-patches
    ask nodes [
     create-links-with nodes-on neighbors4 [
       set color grey
-      set weight 1
+
     ]
   ]
 
@@ -221,9 +221,7 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-      create-link-with goal [
-      set color red
-      ]
+      create-link-with goal
     ]
  ]
 
@@ -454,7 +452,7 @@ num-cars
 num-cars
 1
 400
-59.0
+3.0
 1
 1
 NIL
