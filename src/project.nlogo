@@ -247,8 +247,8 @@ to go
       let target min-one-of nodes-on neighbors4 [
         length nw:turtles-on-weighted-path-to node-on-current-car-goal-path "weight"
       ]
-
-      move-to target
+      face target
+      car-following
       if  distance [ goal ] of self < 1 [
         die
       ]
@@ -454,7 +454,7 @@ num-cars
 num-cars
 1
 400
-59.0
+152.0
 1
 1
 NIL

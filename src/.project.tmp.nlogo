@@ -130,7 +130,7 @@ to setup-patches
    ask nodes [
     create-links-with nodes-on neighbors4 [
       set color grey
-
+      set weight 1
     ]
   ]
 
@@ -221,7 +221,9 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-      create-link-with goal
+      create-link-with goal [
+      set color red
+      ]
     ]
  ]
 
@@ -245,8 +247,8 @@ to go
       let target min-one-of nodes-on neighbors4 [
         length nw:turtles-on-weighted-path-to node-on-current-car-goal-path "weight"
       ]
-
-      move-to target
+      f
+      car-following
       if  distance [ goal ] of self < 1 [
         die
       ]
@@ -452,7 +454,7 @@ num-cars
 num-cars
 1
 400
-3.0
+152.0
 1
 1
 NIL
