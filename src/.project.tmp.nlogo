@@ -139,7 +139,6 @@ to setup-patches
   ask patches [
     if pxcor = 9 and pycor = 1[
       set pcolor red
-      show nodes-here
       ask nodes-here [
         ask my-links [
           set weight 5
@@ -148,6 +147,7 @@ to setup-patches
     ]
     if pxcor = -5 and pycor = 5[
       set pcolor red
+
     ]
   ]
 
@@ -237,7 +237,6 @@ to go
   set num-cars-stopped 0
 
   ask cars [
-    show goal
       let node-on-current-car-path one-of nodes-on patch-here
       let node-on-current-car-goal-path 0
       ask goal [
@@ -247,7 +246,7 @@ to go
       let target min-one-of nodes-on neighbors4 [
         length nw:turtles-on-weighted-path-to node-on-current-car-goal-path "weight"
       ]
-      f
+      face target
       car-following
       if  distance [ goal ] of self < 1 [
         die
@@ -261,7 +260,7 @@ to go
 
 end
 to-report is-new-hour
-  report ticks mod 120 = 0
+  report ticks mod 60 = 0
 end
 to car-following
   set-car-speed
