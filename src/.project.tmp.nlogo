@@ -4,11 +4,7 @@ globals
 [
   grid-x-inc               ;; the amount of patches in between two roads in the x direction
   grid-y-inc               ;; the amount of patches in between two roads in the y direction
-  acceleration             ;; the constant that controls how much a car speeds up or slows down by if
-                           ;; it is to accelerate or decelerate
-  phase                    ;; keeps track of the phase
-  num-cars-stopped         ;; the number of cars that are stopped during a single pass thru the go procedure
-  current-intersection     ;; the currently selected intersection
+  acceleration
   spawned-cars
   hour-of-the-day
   demand-routes
@@ -16,20 +12,14 @@ globals
   current-house
   current-work
   must-end-simulation
+  speed-mean
 ]
 
 
 
 patches-own
 [
-  intersection?   ;; true if the patch is at the intersection of two roads
-  green-light-up? ;; true if the green light is above the intersection.  otherwise, false.
-                  ;; false for a non-intersection patches.
-  my-row          ;; the row of the intersection counting from the upper left corner of the
-                  ;; world.  -1 for non-intersection patches.
-  my-column       ;; the column of the intersection counting from the upper left corner of the
-                  ;; world.  -1 for non-intersection patches.
-  auto?           ;; whether or not this intersection will switch automatically.
+  intersection?
 ]
 breed [intersections intersection]
 breed [nodes node]
@@ -38,25 +28,19 @@ breed [cars car]
 intersections-own [
 id
 ]
+
 links-own [ weight ]
 
 cars-own[
 speed
   speed-capacity
   up-car?
-  wait-time
+
   work
   house
   goal
-
 ]
-;;;;;;;;;;;;;;;;;;;;;;
-;; Setup Procedures ;;
-;;;;;;;;;;;;;;;;;;;;;;
 
-;; Initialize the display by giving the global and patch variables initial values.
-;; Create num-cars of turtles if there are enough road patches for one turtle to
-;; be created per road patch.
 to setup
   clear-all
   setup-globals
@@ -64,13 +48,10 @@ to setup
   reset-ticks
 end
 
-;; Initialize the global variables to appropriate values
+
 to setup-globals
-  set current-intersection nobody ;; just for now, since there are no intersections yet
-  set phase 0
-  set num-cars-stopped 0
-  set grid-x-inc world-width / grid-size-x
-  set grid-y-inc world-height / grid-size-y
+  set grid-x-inc world-width / 4
+  set grid-y-inc world-height / 5
   set spawned-cars 0
   set hour-of-the-day 8
   set acceleration 0.099
@@ -82,10 +63,6 @@ to setup-patches
   ;; initialize the patch-owned variables and color the patches to a base-color
   ask patches [
     set intersection? false
-    set auto? false
-    set green-light-up? false
-    set my-row -1
-    set my-column -1
     set pcolor brown + 3
   ]
 
@@ -122,9 +99,6 @@ to setup-patches
 
   ]
 
-  ;
-  ;y-10
-
   ask patches with [pcolor = white] [
     sprout-nodes 1 [
      set size 0.5
@@ -141,19 +115,25 @@ to setup-patches
 
   setup-intersections
 
-  ask patches [
-    if pxcor = 9 and pycor = 1[
-      ;set-toll
-    ]
-    if pxcor = -5 and pycor = 5[
-      set-toll
-    ]
-  ]
+;  ask patches [
+;    if pxcor = 9 and pycor = 1[
+;      set-toll
+;    ]
+;    if pxcor = -5 and pycor = 5[
+;      set-toll
+;    ]
+;  ]
 
   ask patches with [pycor = -10] [
     if pxcor >= -9 and pxcor <= 8 [
-      set-toll
+      ;set-toll
     ]
+  ]
+  ask one-of  with [ pcolor = white ]  [
+
+    set-toll
+
+    show self
 
   ]
 
@@ -164,7 +144,7 @@ to set-toll
    set pcolor red
       ask nodes-here [
         ask my-links [
-          set weight 5
+          set weight 10
         ]
       ]
 end
@@ -178,7 +158,6 @@ to setup-intersections
     ask intersection-patch  [
       sprout-intersections 1 [
         set size 1
-        set shape "flower"
         set index index + 1
         set id index
       ]
@@ -186,16 +165,15 @@ to setup-intersections
   ]
 end
 
-;; Initialize the turtle variables to appropriate values and place the turtle on an empty road patch.
-to setup-cars  ;; turtle procedure
+
+to setup-cars
   set speed 0
-  set wait-time 0
   ifelse intersection? [
     ifelse random 2 = 0
       [ set up-car? true ]
       [ set up-car? false ]
   ]
-  [ ; if the turtle is on a vertical road (rather than a horizontal one)
+  [
     ifelse (floor ((pxcor + max-pxcor - floor(grid-x-inc - 1)) mod grid-x-inc) = 0)
       [ set up-car? true ]
       [ set up-car? false ]
@@ -212,9 +190,7 @@ to create-demand-routes
   repeat ((count intersections * 2) / 3 ) [
     let temp1 one-of intersections
     let temp2 one-of intersections with [ self != temp1]
-
     set new-routes lput (list temp1 temp2) new-routes
-
   ]
   set demand-routes new-routes
 end
@@ -227,7 +203,6 @@ to start-new-demand
     create-cars num-cars [
       let route one-of demand-routes
       setup-cars
-      record-data
       set house first route
       set work last route
       set goal work
@@ -236,26 +211,25 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-      create-link-with goal [
-      set color red
-      ]
+;      create-link-with goal [
+;        set color red
+;      ]
     ]
  ]
 
 end
 
 to go
+  clear-ticks
   if is-new-hour[
     start-new-demand
   ]
-;  print count turtles
-  set num-cars-stopped 0
 
   ask cars [
       let node-on-current-car-path one-of nodes-on patch-here
       let node-on-current-car-goal-path 0
       ask goal [
-      set node-on-current-car-goal-path one-of nodes-on patch-here
+        set node-on-current-car-goal-path one-of nodes-on patch-here
       ]
 
       let target min-one-of nodes-on neighbors4 [
@@ -263,13 +237,18 @@ to go
       ]
       face target
       car-following
+
+      set speed-mean speed-mean + (mean [speed] of cars )
       if  distance [ goal ] of self < 1 [
         die
       ]
 
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
-  if must-end-simulation [stop]
+  if must-end-simulation [
+    show (speed-mean / ticks)
+    stop
+  ]
 
   tick
 
@@ -277,15 +256,10 @@ end
 to-report is-new-hour
   report ticks mod 60 = 0
 end
+
 to car-following
   set-car-speed
   fd speed
-end
-
-
-;; update the variables for the current intersection
-to update-variables ;; patch procedure
-  set auto? current-auto?
 end
 
 to set-car-speed  ;; turtle procedure
@@ -296,14 +270,8 @@ to set-car-speed  ;; turtle procedure
 
 end
 
-;; set the speed variable of the turtle to an appropriate value (not exceeding the
-;; speed limit) based on whether there are turtles on the patch in front of the turtle
-to set-speed [ delta-x delta-y ]  ;; turtle procedure
-  ;; get the turtles on the patch in front of the turtle
+to set-speed [ delta-x delta-y ]
   let turtles-ahead cars-at delta-x delta-y
-
-  ;; if there are turtles in front of the turtle, slow down
-  ;; otherwise, speed up
   ifelse any? turtles-ahead [
     ifelse any? (turtles-ahead with [ up-car? != [ up-car? ] of myself ]) [
       set speed 0
@@ -316,43 +284,16 @@ to set-speed [ delta-x delta-y ]  ;; turtle procedure
   [ speed-up ]
 end
 
-;; decrease the speed of the car
-to slow-down  ;; turtle procedure
+to slow-down
   ifelse speed <= 0.1
     [ set speed 0.1 ]
     [ set speed speed - acceleration ]
 end
 
-;; increase the speed of the car
 to speed-up  ;; turtle procedure
-  ifelse speed > speed-limit
-    [ set speed speed-limit ]
+  ifelse speed > 1
+    [ set speed 1 ]
     [ set speed  speed + acceleration ]
-end
-
-
-;; keep track of the number of stopped cars and the amount of time a car has been stopped
-;; if its speed is 0
-to record-data  ;; turtle procedure
-  ifelse speed = 0 [
-    set num-cars-stopped num-cars-stopped + 1
-    set wait-time wait-time + 1
-  ]
-  [ set wait-time 0 ]
-end
-
-
-;; establish goal of driver (house or work) and move to next patch along the way
-to-report next-patch
-  let choices neighbors with [ pcolor = white or pcolor = blue or pcolor = red ]
-
-  let choice min-one-of choices [ distance [ goal ] of myself ]
-  ;if distance [ goal ] of self < 2 [
-
-  ;print distance [ goal ] of self
-  ;]
-
-  report choice
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -382,83 +323,6 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
-PLOT
-453
-377
-671
-552
-Average Wait Time of Cars
-Time
-Average Wait
-0.0
-100.0
-0.0
-5.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [wait-time] of turtles"
-
-PLOT
-228
-377
-444
-552
-Average Speed of Cars
-Time
-Average Speed
-0.0
-100.0
-0.0
-1.0
-true
-false
-"set-plot-y-range 0 speed-limit" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [speed] of turtles"
-
-SLIDER
-110
-10
-205
-43
-grid-size-y
-grid-size-y
-1
-9
-5.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-10
-10
-104
-43
-grid-size-x
-grid-size-x
-1
-9
-4.0
-1
-1
-NIL
-HORIZONTAL
-
-SWITCH
-10
-85
-155
-118
-power?
-power?
-0
-1
--1000
-
 SLIDER
 10
 45
@@ -468,29 +332,11 @@ num-cars
 num-cars
 1
 400
-310.0
+240.0
 1
 1
 NIL
 HORIZONTAL
-
-PLOT
-5
-376
-219
-551
-Stopped Cars
-Time
-Stopped Cars
-0.0
-100.0
-0.0
-100.0
-true
-false
-"set-plot-y-range 0 num-cars" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot num-cars-stopped"
 
 BUTTON
 220
@@ -526,21 +372,6 @@ NIL
 NIL
 1
 
-SLIDER
-10
-165
-155
-198
-speed-limit
-speed-limit
-0.1
-1
-0.8
-0.1
-1
-NIL
-HORIZONTAL
-
 MONITOR
 185
 125
@@ -551,115 +382,6 @@ hour-of-the-day
 3
 1
 11
-
-SLIDER
-10
-130
-155
-163
-ticks-per-cycle
-ticks-per-cycle
-1
-100
-23.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-160
-225
-305
-258
-current-phase
-current-phase
-0
-99
-8.0
-1
-1
-%
-HORIZONTAL
-
-BUTTON
-9
-265
-154
-298
-Change light
-change-light-at-current-intersection
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-SWITCH
-9
-225
-154
-258
-current-auto?
-current-auto?
-0
-1
--1000
-
-BUTTON
-159
-265
-304
-298
-Select intersection
-choose-current
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-BUTTON
-10
-330
-155
-363
-watch a car
-watch-a-car
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-BUTTON
-160
-330
-305
-363
-stop watching
-stop-watching
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
 
 @#$#@#$#@
 ## ACKNOWLEDGMENT
