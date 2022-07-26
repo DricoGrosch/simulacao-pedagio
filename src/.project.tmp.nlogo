@@ -13,6 +13,7 @@ globals
   current-work
   must-end-simulation
   speed-mean
+  cars-walked-on-toll
 ]
 
 
@@ -56,6 +57,7 @@ to setup-globals
   set hour-of-the-day 8
   set acceleration 0.099
   set must-end-simulation false
+  set cars-walked-on-toll 0
 end
 
 
@@ -115,24 +117,11 @@ to setup-patches
 
   setup-intersections
 
-;  ask patches [
-;    if pxcor = 9 and pycor = 1[
-;      set-toll
-;    ]
-;    if pxcor = -5 and pycor = 5[
-;      set-toll
-;    ]
-;  ]
-
-  ask patches with [pycor = -10] [
-    if pxcor >= -9 and pxcor <= 8 [
-      ;set-toll
-    ]
-  ]
-  ask one-of  with [ pcolor = white ]  [
-
+;  ask patches with [  pxcor = 0 and pycor = -1 ] [set-toll]
+  ask patches with [  pxcor = 12 and pycor = -10 ] [set-toll]
+  ask patches with [  pxcor = 9 and pycor = 0 ] [set-toll]
+  ask n-of 1 patches with [pcolor = white] [
     set-toll
-
     show self
 
   ]
@@ -144,7 +133,7 @@ to set-toll
    set pcolor red
       ask nodes-here [
         ask my-links [
-          set weight 10
+          set weight 15
         ]
       ]
 end
@@ -220,7 +209,7 @@ to start-new-demand
 end
 
 to go
-  clear-ticks
+
   if is-new-hour[
     start-new-demand
   ]
@@ -237,7 +226,11 @@ to go
       ]
       face target
       car-following
-
+    ask patch-here [
+      if pcolor = red [
+      set cars-walked-on-toll cars-walked-on-toll + 1
+      ]
+    ]
       set speed-mean speed-mean + (mean [speed] of cars )
       if  distance [ goal ] of self < 1 [
         die
@@ -380,6 +373,17 @@ MONITOR
 Hour of the day
 hour-of-the-day
 3
+1
+11
+
+MONITOR
+45
+120
+162
+165
+cars-walked-on-toll
+cars-walked-on-toll
+17
 1
 11
 
