@@ -262,7 +262,9 @@ to start-new-demand
  ]
 
 end
+to arrived
 
+end
 to go
 
   if is-new-hour[
@@ -285,8 +287,21 @@ to go
         car-following
 
     if speed < old-speed [
-      if (1 - (speed / old-speed) < 0.1 ) [
-       set target min-one-of nodes-on neighbors4 [ count cars-here   ]
+      if (1 - (speed / old-speed) < 0.3 ) [
+        let best-speed-mean 0
+        ask nodes-on neighbors4 [
+          let path-speed-mean 0
+            foreach nw:turtles-on-path-to node-on-current-car-goal-path [ x ->
+            ifelse count cars-here > 0
+            [set path-speed-mean path-speed-mean + mean [speed] of cars-here]
+            [set path-speed-mean path-speed-mean + 1]
+
+          if path-speed-mean >= best-speed-mean[
+            set best-speed-mean path-speed-mean
+            set target self
+           ]
+          ]
+        ]
       ]
     ]
      face target
@@ -390,7 +405,7 @@ num-cars
 num-cars
 1
 400
-94.0
+1.0
 1
 1
 NIL
