@@ -146,11 +146,11 @@ to setup-patches
 
   setup-intersections
 
-  ask patches with [  pxcor = -5 and pycor = 1 ] [set-toll]
-;  ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-;  ask patches with [  pxcor = 8 and pycor = 7 ] [set-toll]
-;   ask patches with [  pxcor = -6 and pycor = -11 ] [set-toll]
-;
+  ask patches with [  pxcor =  and pycor = 1 ] [set-toll]
+  ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
+  ask patches with [  pxcor = 8 and pycor = 7 ] [set-toll]
+   ask patches with [  pxcor = -6 and pycor = -11 ] [set-toll]
+
 
 
 end
@@ -206,7 +206,7 @@ to create-demand-routes
 
   repeat ((count intersections * 2) / 3 ) [
     let temp1 one-of intersections
-    let temp2 one-of intersections with [ self != temp1]
+    let temp2 one-of intersections with [self != temp1]
     set new-routes lput (list temp1 temp2) new-routes
   ]
   set demand-routes new-routes
@@ -215,9 +215,10 @@ end
 to start-new-demand
   set hour-of-the-day hour-of-the-day + 1
   set spawned-cars 0
-  create-demand-routes
+
   if hour-of-the-day <= 18[
     create-cars num-cars [
+      create-demand-routes
       let route one-of demand-routes
       setup-cars
       set house first route
@@ -228,9 +229,10 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-      create-link-with goal [
-        set color red
-      ]
+;      create-link-with goal [
+;        set color red
+;      ]
+
     ]
  ]
 
@@ -353,7 +355,7 @@ num-cars
 num-cars
 1
 400
-185.0
+400.0
 1
 1
 NIL
