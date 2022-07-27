@@ -91,8 +91,15 @@ to setup-patches
     ask patch 11 -4 [ set pcolor brown + 3 ]
 
 
+      ask patch 11 12 [ set pcolor brown + 3 ]
+    ask patch 11 11 [ set pcolor brown + 3 ]
+    ask patch 11 10 [ set pcolor brown + 3 ]
+    ask patch 11 9 [ set pcolor brown + 3 ]
+    ask patch 11 8 [ set pcolor brown + 3 ]
 
-  ask patch -4 6[ set pcolor brown + 3 ]
+
+
+    ask patch -4 6[ set pcolor brown + 3 ]
     ask patch -4 5 [ set pcolor brown + 3 ]
     ask patch -4 4 [ set pcolor brown + 3 ]
     ask patch -4 3 [ set pcolor brown + 3 ]
@@ -112,12 +119,12 @@ to setup-patches
     ask patch -4 -10 [ set pcolor brown + 3 ]
 
 
-        ask patch -4 -12 [ set pcolor brown + 3 ]
+    ask patch -4 -12 [ set pcolor brown + 3 ]
     ask patch -4 -13 [ set pcolor brown + 3 ]
     ask patch -4 -14 [ set pcolor brown + 3 ]
     ask patch -4 -15 [ set pcolor brown + 3 ]
     ask patch -4 -16 [ set pcolor brown + 3 ]
-
+    ask patch -4 -17 [ set pcolor brown + 3 ]
 
     set pcolor white
 
@@ -140,9 +147,10 @@ to setup-patches
   setup-intersections
 
   ask patches with [  pxcor = -5 and pycor = 1 ] [set-toll]
-  ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-  ask patches with [  pxcor = 0 and pycor = 7 ] [set-toll]
-
+;  ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
+;  ask patches with [  pxcor = 8 and pycor = 7 ] [set-toll]
+;   ask patches with [  pxcor = -6 and pycor = -11 ] [set-toll]
+;
 
 
 end
@@ -151,7 +159,7 @@ to set-toll
    set pcolor red
       ask nodes-here [
         ask my-links [
-          set weight 5
+          set weight 8
         ]
       ]
 end
@@ -163,10 +171,12 @@ to setup-intersections
   ]
   foreach sort intersection-patches[intersection-patch ->
     ask intersection-patch  [
-      sprout-intersections 1 [
-        set size 1
-        set index index + 1
-        set id index
+      if  (list pxcor pycor) !=  (list -4  -5) and (list pxcor pycor) !=  (list -4  -11) and (list pxcor pycor) !=  (list -4  -18) and (list pxcor pycor) !=  (list -4  1)[
+        sprout-intersections 1 [
+          set size 1
+          set index index + 1
+          set id index
+        ]
       ]
     ]
   ]
@@ -218,9 +228,9 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-;      create-link-with goal [
-;        set color red
-;      ]
+      create-link-with goal [
+        set color red
+      ]
     ]
  ]
 
@@ -343,7 +353,7 @@ num-cars
 num-cars
 1
 400
-400.0
+185.0
 1
 1
 NIL
