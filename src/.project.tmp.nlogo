@@ -51,8 +51,8 @@ end
 
 
 to setup-globals
-  set grid-x-inc world-width / 4
-  set grid-y-inc world-height / 5
+  set grid-x-inc world-width / 5
+  set grid-y-inc world-height / 6
   set spawned-cars 0
   set hour-of-the-day 8
   set acceleration 0.099
@@ -78,25 +78,47 @@ to setup-patches
 
 
   ask roads [
-    ask patch -9 -3 [ set pcolor brown + 3 ]
-    ask patch -8 -3 [ set pcolor brown + 3 ]
-    ask patch -7 -3 [ set pcolor brown + 3 ]
-    ask patch -6 -3 [ set pcolor brown + 3 ]
-    ask patch -5 -3 [ set pcolor brown + 3 ]
+    ask patch -4 -4 [ set pcolor brown + 3 ]
     ask patch -4 -3 [ set pcolor brown + 3 ]
-    ask patch -3 -3 [ set pcolor brown + 3 ]
-    ask patch -2 -3 [ set pcolor brown + 3 ]
-    ask patch -1 -3 [ set pcolor brown + 3 ]
+    ask patch -4 -2 [ set pcolor brown + 3 ]
+    ask patch -4 -1 [ set pcolor brown + 3 ]
+    ask patch -4 -0 [ set pcolor brown + 3 ]
+
+    ask patch 11 0 [ set pcolor brown + 3 ]
+    ask patch 11 -1 [ set pcolor brown + 3 ]
+    ask patch 11 -2 [ set pcolor brown + 3 ]
+    ask patch 11 -3 [ set pcolor brown + 3 ]
+    ask patch 11 -4 [ set pcolor brown + 3 ]
 
 
-    ask patch 8 5 [ set pcolor brown + 3 ]
-    ask patch 7 5 [ set pcolor brown + 3 ]
-    ask patch 6 5 [ set pcolor brown + 3 ]
-    ask patch 5 5 [ set pcolor brown + 3 ]
-    ask patch 4 5 [ set pcolor brown + 3 ]
+
+  ask patch -4 6[ set pcolor brown + 3 ]
+    ask patch -4 5 [ set pcolor brown + 3 ]
+    ask patch -4 4 [ set pcolor brown + 3 ]
+    ask patch -4 3 [ set pcolor brown + 3 ]
+    ask patch -4 2 [ set pcolor brown + 3 ]
+
+     ask patch 3 6[ set pcolor brown + 3 ]
     ask patch 3 5 [ set pcolor brown + 3 ]
-    ask patch 2 5 [ set pcolor brown + 3 ]
-    ask patch 1 5 [ set pcolor brown + 3 ]
+    ask patch 3 4 [ set pcolor brown + 3 ]
+    ask patch 3 3 [ set pcolor brown + 3 ]
+    ask patch 3 2 [ set pcolor brown + 3 ]
+
+
+    ask patch -4 -6 [ set pcolor brown + 3 ]
+    ask patch -4 -7 [ set pcolor brown + 3 ]
+    ask patch -4 -8 [ set pcolor brown + 3 ]
+    ask patch -4 -9 [ set pcolor brown + 3 ]
+    ask patch -4 -10 [ set pcolor brown + 3 ]
+
+
+        ask patch -4 -12 [ set pcolor brown + 3 ]
+    ask patch -4 -13 [ set pcolor brown + 3 ]
+    ask patch -4 -14 [ set pcolor brown + 3 ]
+    ask patch -4 -15 [ set pcolor brown + 3 ]
+    ask patch -4 -16 [ set pcolor brown + 3 ]
+
+
     set pcolor white
 
   ]
@@ -117,14 +139,10 @@ to setup-patches
 
   setup-intersections
 
-;  ask patches with [  pxcor = 0 and pycor = -1 ] [set-toll]
-  ask patches with [  pxcor = 12 and pycor = -10 ] [set-toll]
-  ask patches with [  pxcor = 9 and pycor = 0 ] [set-toll]
-  ask n-of 1 patches with [pcolor = white] [
-    set-toll
-    show self
+  ask patches with [  pxcor = -5 and pycor = 1 ] [set-toll]
+  ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
+  ask patches with [  pxcor = 0 and pycor = 7 ] [set-toll]
 
-  ]
 
 
 end
@@ -133,7 +151,7 @@ to set-toll
    set pcolor red
       ask nodes-here [
         ask my-links [
-          set weight 15
+          set weight 5
         ]
       ]
 end
@@ -239,7 +257,7 @@ to go
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [
-    show (speed-mean / ticks)
+    show (speed-mean / num-cars)
     stop
   ]
 
@@ -325,7 +343,7 @@ num-cars
 num-cars
 1
 400
-240.0
+400.0
 1
 1
 NIL
