@@ -121,6 +121,10 @@ to setup-patches
     set pcolor white
 
   ]
+  setup-diagonals
+  ask patches with [pxcor = min-pxcor][
+    set pcolor white
+  ]
 
   ask patches with [pcolor = white] [
     sprout-nodes 1 [
@@ -131,7 +135,7 @@ to setup-patches
   ]
    ask nodes [
     create-links-with nodes-on neighbors4 [
-      set color white
+      set color blue
       set weight 1
     ]
   ]
@@ -145,7 +149,39 @@ to setup-patches
 
 
 end
+to setup-diagonals
+  ask patches [
+    ask patch -10 12 [ set pcolor white ]
+    ask patch -9 11 [ set pcolor white ]
+    ask patch -9 12 [ set pcolor white ]
+    ask patch -8 10 [ set pcolor white ]
+    ask patch -8 11 [ set pcolor white ]
+    ask patch -7 9 [ set pcolor white ]
+    ask patch -6 8 [ set pcolor white ]
+    ask patch -6 9 [ set pcolor white ]
+    ask patch -7 10 [ set pcolor white ]
 
+    ask patch 5 -4 [ set pcolor white ]
+    ask patch 5 -3 [ set pcolor white ]
+    ask patch 6 -3 [ set pcolor white ]
+    ask patch 6 -2 [ set pcolor white ]
+    ask patch 7 -1 [ set pcolor white ]
+    ask patch 7 -2 [ set pcolor white ]
+    ask patch 7 0 [ set pcolor white ]
+
+
+    ask patch -3 -4 [ set pcolor white ]
+    ask patch -3 -3 [ set pcolor white ]
+    ask patch -2 -3 [ set pcolor white ]
+    ask patch -2 -2 [ set pcolor white ]
+    ask patch -1 -2 [ set pcolor white ]
+    ask patch -1 -1 [ set pcolor white ]
+    ask patch 0 -1 [ set pcolor white ]
+    ask patch 0 0 [ set pcolor white ]
+
+
+  ]
+end
 to set-toll
    set pcolor red
       ask nodes-here [
@@ -194,8 +230,8 @@ to create-demand-routes
   let new-routes (list)
 
   repeat ((count intersections * 2) / 3 ) [
-    let temp1 one-of intersections
-    let temp2 one-of intersections with [ self != temp1]
+  let temp1 one-of intersections
+    let temp2 one-of intersections with [self != temp1]
     set new-routes lput (list temp1 temp2) new-routes
   ]
   set demand-routes new-routes
@@ -204,9 +240,11 @@ end
 to start-new-demand
   set hour-of-the-day hour-of-the-day + 1
   set spawned-cars 0
-  create-demand-routes
+
   if hour-of-the-day <= 18[
+    create-demand-routes
     create-cars num-cars [
+
       let route one-of demand-routes
       setup-cars
       set house first route
@@ -241,8 +279,19 @@ to go
       let target min-one-of nodes-on neighbors4 [
         length nw:turtles-on-weighted-path-to node-on-current-car-goal-path "weight"
       ]
-      face target
-      car-following
+        let old-speed speed
+        let current-car self
+        face target
+        car-following
+
+    if speed < old-speed [
+      if (1 - (speed / old-speed) < 0.1 ) [
+       set target min-one-of nodes-on neighbors4 [ count cars-here   ]
+      ]
+    ]
+     face target
+     car-following
+      fd speed
     ask patch-here [
       if pcolor = red [
       set cars-walked-on-toll cars-walked-on-toll + 1
@@ -269,7 +318,6 @@ end
 
 to car-following
   set-car-speed
-  fd speed
 end
 
 to set-car-speed  ;; turtle procedure
@@ -281,13 +329,13 @@ to set-car-speed  ;; turtle procedure
 end
 
 to set-speed [ delta-x delta-y ]
-  let turtles-ahead cars-at delta-x delta-y
-  ifelse any? turtles-ahead [
-    ifelse any? (turtles-ahead with [ up-car? != [ up-car? ] of myself ]) [
+  let cars-ahead cars-at delta-x delta-y
+  ifelse any? cars-ahead [
+    ifelse any? (cars-ahead with [ up-car? != [ up-car? ] of myself ]) [
       set speed 0
     ]
     [
-      set speed [speed] of one-of turtles-ahead
+      set speed [speed] of one-of cars-ahead
       slow-down
     ]
   ]
@@ -295,15 +343,15 @@ to set-speed [ delta-x delta-y ]
 end
 
 to slow-down
-  ifelse speed <= 0.1
-    [ set speed 0.1 ]
+  if speed >= 0.1
     [ set speed speed - acceleration ]
 end
 
 to speed-up  ;; turtle procedure
-  ifelse speed > 1
-    [ set speed 1 ]
-    [ set speed  speed + acceleration ]
+  if speed <= 1[
+
+     set speed  speed + acceleration
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -342,7 +390,7 @@ num-cars
 num-cars
 1
 400
-400.0
+94.0
 1
 1
 NIL
