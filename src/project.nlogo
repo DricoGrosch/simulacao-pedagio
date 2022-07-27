@@ -33,6 +33,7 @@ id
 links-own [ weight ]
 
 cars-own[
+  can-change-route
 speed
   speed-capacity
   up-car?
@@ -207,6 +208,7 @@ to start-new-demand
   create-demand-routes
   if hour-of-the-day <= 18[
     create-cars num-cars [
+      set can-change-route true
       let route one-of demand-routes
       setup-cars
       set house first route
@@ -241,6 +243,39 @@ to go
       let target min-one-of nodes-on neighbors4 [
         length nw:turtles-on-weighted-path-to node-on-current-car-goal-path "weight"
       ]
+        if can-change-route [
+        let old-speed speed
+        let current-car self
+        face target
+        car-following
+
+
+      if speed <= old-speed  [
+        if old-speed - speed < 0.5[
+          show "vai trocar a rota"
+          set can-change-route false
+          let best-speed-mean 0
+          ask nodes-on neighbors4 [
+            let path-speed-mean 0
+              foreach nw:turtles-on-path-to node-on-current-car-goal-path [ x ->
+              ifelse count cars-here > 0
+              [set path-speed-mean path-speed-mean + mean [speed] of cars-here]
+              [set path-speed-mean path-speed-mean + 1]
+
+              if path-speed-mean >= best-speed-mean[
+                set best-speed-mean path-speed-mean
+                set target self
+              ]
+            ]
+          ]
+        ]
+
+      ]
+    ]
+
+
+
+
       face target
       car-following
     ask patch-here [
@@ -342,7 +377,7 @@ num-cars
 num-cars
 1
 400
-400.0
+207.0
 1
 1
 NIL
