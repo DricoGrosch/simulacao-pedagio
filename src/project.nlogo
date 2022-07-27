@@ -36,7 +36,7 @@ cars-own[
 speed
   speed-capacity
   up-car?
-
+  can-change-route
   work
   house
   goal
@@ -244,7 +244,7 @@ to start-new-demand
   if hour-of-the-day <= 18[
     create-demand-routes
     create-cars num-cars [
-
+      set can-change-route false
       let route one-of demand-routes
       setup-cars
       set house first route
@@ -255,9 +255,9 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-;      create-link-with goal [
-;        set color red
-;      ]
+      create-link-with goal [
+        set color red
+      ]
     ]
  ]
 
@@ -281,26 +281,36 @@ to go
       let target min-one-of nodes-on neighbors4 [
         length nw:turtles-on-weighted-path-to node-on-current-car-goal-path "weight"
       ]
+
+    if can-change-route [
+       show "pode trocar a rota"
         let old-speed speed
         let current-car self
         face target
         car-following
+        let alternative-target 0
 
-    if speed < old-speed [
-      if (1 - (speed / old-speed) < 0.3 ) [
-        let best-speed-mean 0
-        ask nodes-on neighbors4 [
-          let path-speed-mean 0
-            foreach nw:turtles-on-path-to node-on-current-car-goal-path [ x ->
-            ifelse count cars-here > 0
-            [set path-speed-mean path-speed-mean + mean [speed] of cars-here]
-            [set path-speed-mean path-speed-mean + 1]
+      if speed <= old-speed  [
+;        if old-speed - speed < 0.3[
+          show "vai trocar a rota"
+          set can-change-route false
+          let best-speed-mean 0
+          ask nodes-on neighbors4 [
+            let path-speed-mean 0
+              foreach nw:turtles-on-path-to node-on-current-car-goal-path [ x ->
+              ifelse count cars-here > 0
+              [set path-speed-mean path-speed-mean + mean [speed] of cars-here]
+              [set path-speed-mean path-speed-mean + 1]
 
-          if path-speed-mean >= best-speed-mean[
-            set best-speed-mean path-speed-mean
-            set target self
-           ]
+              if path-speed-mean >= best-speed-mean[
+                set best-speed-mean path-speed-mean
+                set alternative-target self
+              ]
+;            ]
           ]
+        ]
+        if alternative-target != target [
+          set target alternative-target
         ]
       ]
     ]
@@ -316,7 +326,9 @@ to go
       if  distance [ goal ] of self < 1 [
         die
       ]
-
+    if ticks mod 120 = 0 [
+      set can-change-route true
+    ]
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [
