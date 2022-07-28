@@ -15,6 +15,9 @@ globals
   speed-mean
   cars-walked-on-toll
   total-cars-spawned
+  simulation-total-stopped-ticks
+  simulation-total-running-ticks
+
 ]
 
 
@@ -38,7 +41,6 @@ cars-own[
 speed
   speed-capacity
   up-car?
-
   work
   house
   goal
@@ -312,12 +314,13 @@ to go
 
       ]
     ]
-
-
-
-
       face target
       car-following
+      fd speed
+    set simulation-total-running-ticks simulation-total-running-ticks + 1
+    if speed = 0 [
+      set simulation-total-stopped-ticks simulation-total-stopped-ticks + 1
+    ]
     ask patch-here [
       if pcolor = red [
       set cars-walked-on-toll cars-walked-on-toll + 1
@@ -331,8 +334,14 @@ to go
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [
+;    print "ticks dos percursos dos carros"
+    print "["
+    print simulation-total-running-ticks
+    print ","
+;    print "ticks de carros parados"
+    print simulation-total-stopped-ticks
+    print "],"
 
-    print (speed-mean / total-cars-spawned)
     setup
   ]
 
@@ -345,7 +354,6 @@ end
 
 to car-following
   set-car-speed
-  fd speed
 end
 
 to set-car-speed  ;; turtle procedure
@@ -455,12 +463,23 @@ hour-of-the-day
 11
 
 MONITOR
-45
-120
-162
-165
+40
+115
+157
+160
 cars-walked-on-toll
 cars-walked-on-toll
+17
+1
+11
+
+MONITOR
+10
+15
+182
+60
+simulation-total-stopped-ticks
+simulation-total-stopped-ticks
 17
 1
 11
