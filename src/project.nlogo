@@ -79,12 +79,12 @@ to setup-patches
 
 
   ask roads [
-    ask patch -4 -4 [ set pcolor brown + 3 ]
     ask patch -4 -3 [ set pcolor brown + 3 ]
+    ask patch -4 -4 [ set pcolor brown + 3 ]
     ask patch -4 -2 [ set pcolor brown + 3 ]
     ask patch -4 -1 [ set pcolor brown + 3 ]
     ask patch -4 -0 [ set pcolor brown + 3 ]
-
+;
     ask patch 11 0 [ set pcolor brown + 3 ]
     ask patch 11 -1 [ set pcolor brown + 3 ]
     ask patch 11 -2 [ set pcolor brown + 3 ]
@@ -98,7 +98,7 @@ to setup-patches
     ask patch -4 4 [ set pcolor brown + 3 ]
     ask patch -4 3 [ set pcolor brown + 3 ]
     ask patch -4 2 [ set pcolor brown + 3 ]
-
+;
      ask patch 3 6[ set pcolor brown + 3 ]
     ask patch 3 5 [ set pcolor brown + 3 ]
     ask patch 3 4 [ set pcolor brown + 3 ]
@@ -139,10 +139,12 @@ to setup-patches
 
   setup-intersections
 
-  ask patches with [  pxcor = -5 and pycor = 1 ] [set-toll]
+  ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
   ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-  ask patches with [  pxcor = 0 and pycor = 7 ] [set-toll]
-
+;  ask patches with [  pxcor = 0 and pycor = 7 ] [set-toll]
+;  ask patches with [  pxcor = -1 and pycor = 13 ] [set-toll]
+;  ask patches with [  pxcor = -7 and pycor = -18 ] [set-toll]
+;
 
 
 end
@@ -151,25 +153,40 @@ to set-toll
    set pcolor red
       ask nodes-here [
         ask my-links [
-          set weight 5
+          set weight 10
         ]
       ]
 end
 to setup-intersections
   let index 1
-  let intersection-patches roads with [
-    (floor ((pxcor + max-pxcor - floor (grid-x-inc - 1)) mod grid-x-inc) = 0) and
-    (floor ((pycor + max-pycor) mod grid-y-inc) = 0)
-  ]
-  foreach sort intersection-patches[intersection-patch ->
-    ask intersection-patch  [
-      sprout-intersections 1 [
+  ask patches with [pcolor = white and pxcor = min-pxcor][
+  sprout-intersections 1 [
         set size 1
         set index index + 1
         set id index
+          set shape "circle"
       ]
-    ]
+      ]
+;  ask patches with [pcolor = white and pycor = max-pxcor][
+;  sprout-intersections 1 [
+;        set size 1
+;        set index index + 1
+;        set id index
+;          set shape "circle"
+;      ]
+;      ]
+
+
+  ask patches with [  pxcor = max-pxcor and floor(pycor mod grid-y-inc )= 0 ] [
+   sprout-intersections 1 [
+        set size 1
+        set index index + 1
+        set id index
+          set shape "circle"
+      ]
+
   ]
+
 end
 
 
@@ -219,9 +236,9 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-;      create-link-with goal [
-;        set color red
-;      ]
+      create-link-with goal [
+        set color red
+      ]
     ]
  ]
 
@@ -252,7 +269,7 @@ to go
 
       if speed <= old-speed  [
         if old-speed - speed < 0.5[
-          show "vai trocar a rota"
+;          show "vai trocar a rota"
           set can-change-route false
           let best-speed-mean 0
           ask nodes-on neighbors4 [
@@ -377,7 +394,7 @@ num-cars
 num-cars
 1
 400
-207.0
+400.0
 1
 1
 NIL
