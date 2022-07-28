@@ -14,6 +14,10 @@ globals
   must-end-simulation
   speed-mean
   cars-walked-on-toll
+  total-cars-spawned
+  simulation-total-stopped-ticks
+  simulation-total-running-ticks
+
 ]
 
 
@@ -33,10 +37,10 @@ id
 links-own [ weight ]
 
 cars-own[
+  can-change-route
 speed
   speed-capacity
   up-car?
-
   work
   house
   goal
@@ -58,6 +62,7 @@ to setup-globals
   set acceleration 0.099
   set must-end-simulation false
   set cars-walked-on-toll 0
+  set total-cars-spawned 0
 end
 
 
@@ -78,12 +83,12 @@ to setup-patches
 
 
   ask roads [
-    ask patch -4 -4 [ set pcolor brown + 3 ]
     ask patch -4 -3 [ set pcolor brown + 3 ]
+    ask patch -4 -4 [ set pcolor brown + 3 ]
     ask patch -4 -2 [ set pcolor brown + 3 ]
     ask patch -4 -1 [ set pcolor brown + 3 ]
     ask patch -4 -0 [ set pcolor brown + 3 ]
-
+;
     ask patch 11 0 [ set pcolor brown + 3 ]
     ask patch 11 -1 [ set pcolor brown + 3 ]
     ask patch 11 -2 [ set pcolor brown + 3 ]
@@ -91,20 +96,13 @@ to setup-patches
     ask patch 11 -4 [ set pcolor brown + 3 ]
 
 
-      ask patch 11 12 [ set pcolor brown + 3 ]
-    ask patch 11 11 [ set pcolor brown + 3 ]
-    ask patch 11 10 [ set pcolor brown + 3 ]
-    ask patch 11 9 [ set pcolor brown + 3 ]
-    ask patch 11 8 [ set pcolor brown + 3 ]
 
-
-
-    ask patch -4 6[ set pcolor brown + 3 ]
+  ask patch -4 6[ set pcolor brown + 3 ]
     ask patch -4 5 [ set pcolor brown + 3 ]
     ask patch -4 4 [ set pcolor brown + 3 ]
     ask patch -4 3 [ set pcolor brown + 3 ]
     ask patch -4 2 [ set pcolor brown + 3 ]
-
+;
      ask patch 3 6[ set pcolor brown + 3 ]
     ask patch 3 5 [ set pcolor brown + 3 ]
     ask patch 3 4 [ set pcolor brown + 3 ]
@@ -119,12 +117,11 @@ to setup-patches
     ask patch -4 -10 [ set pcolor brown + 3 ]
 
 
-    ask patch -4 -12 [ set pcolor brown + 3 ]
+        ask patch -4 -12 [ set pcolor brown + 3 ]
     ask patch -4 -13 [ set pcolor brown + 3 ]
     ask patch -4 -14 [ set pcolor brown + 3 ]
     ask patch -4 -15 [ set pcolor brown + 3 ]
     ask patch -4 -16 [ set pcolor brown + 3 ]
-    ask patch -4 -17 [ set pcolor brown + 3 ]
 
     set pcolor white
 
@@ -145,21 +142,33 @@ to setup-patches
   ]
 
   setup-intersections
-
-  ask patches with [  pxcor =  and pycor = 1 ] [set-toll]
-  ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-  ask patches with [  pxcor = 8 and pycor = 7 ] [set-toll]
-   ask patches with [  pxcor = -6 and pycor = -11 ] [set-toll]
-
+  setup-tolls
 
 
 end
+to setup-tolls
 
+;    ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
+;   ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
+;   ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
+;   ask patches with [  pxcor = -1 and pycor = 7 ] [set-toll]
+;   ask patches with [  pxcor = 7 and pycor = 1 ] [set-toll]
+;    ask patches with [  pxcor = -12 and pycor = 4 ] [set-toll]
+
+;      ask patches with [  pxcor = -12 and pycor = 8 ] [set-toll]
+;  ask patches with [  pxcor = 15 and pycor = -11 ] [set-toll]
+
+
+;  ask n-of 2 roads  [
+;    set-toll
+;  ]
+
+end
 to set-toll
    set pcolor red
       ask nodes-here [
         ask my-links [
-          set weight 8
+          set weight 5
         ]
       ]
 end
@@ -171,15 +180,35 @@ to setup-intersections
   ]
   foreach sort intersection-patches[intersection-patch ->
     ask intersection-patch  [
-      if  (list pxcor pycor) !=  (list -4  -5) and (list pxcor pycor) !=  (list -4  -11) and (list pxcor pycor) !=  (list -4  -18) and (list pxcor pycor) !=  (list -4  1)[
-        sprout-intersections 1 [
-          set size 1
-          set index index + 1
-          set id index
-        ]
+      sprout-intersections 1 [
+        set size 1
+        set index index + 1
+        set id index
+        set shape "circle"
       ]
     ]
   ]
+
+  ask intersections [
+    if (list pxcor pycor) = (list -4 1)
+    or (list pxcor pycor) = (list -4 -5)
+    or (list pxcor pycor) = (list -4 -11)
+    or (list pxcor pycor) = (list -4 -18)
+    or (list pxcor pycor) = (list -4 7)
+    or (list pxcor pycor) = (list 3 7)
+    or (list pxcor pycor) = (list 11 -5)
+    or (list pxcor pycor) = (list 11 -11)
+    or (list pxcor pycor) = (list 11 -18)
+    or (list pxcor pycor) = (list 3 13)
+    or (list pxcor pycor) = (list -4 13)
+    or (list pxcor pycor) = (list 3 1)
+    [
+      die
+    ]
+
+  ]
+
+
 end
 
 
@@ -206,7 +235,7 @@ to create-demand-routes
 
   repeat ((count intersections * 2) / 3 ) [
     let temp1 one-of intersections
-    let temp2 one-of intersections with [self != temp1]
+    let temp2 one-of intersections with [ self != temp1]
     set new-routes lput (list temp1 temp2) new-routes
   ]
   set demand-routes new-routes
@@ -217,8 +246,16 @@ to start-new-demand
   set spawned-cars 0
 
   if hour-of-the-day <= 18[
-    create-cars num-cars [
+
+
+    let cars-to-spawn 100
+    if hour-of-the-day > 11 and hour-of-the-day < 15[
+    set cars-to-spawn cars-to-spawn * 2
+    ]
+    set total-cars-spawned total-cars-spawned + cars-to-spawn
+    create-cars cars-to-spawn [
       create-demand-routes
+      set can-change-route true
       let route one-of demand-routes
       setup-cars
       set house first route
@@ -232,7 +269,6 @@ to start-new-demand
 ;      create-link-with goal [
 ;        set color red
 ;      ]
-
     ]
  ]
 
@@ -242,6 +278,7 @@ to go
 
   if is-new-hour[
     start-new-demand
+
   ]
 
   ask cars [
@@ -254,14 +291,48 @@ to go
       let target min-one-of nodes-on neighbors4 [
         length nw:turtles-on-weighted-path-to node-on-current-car-goal-path "weight"
       ]
+        if can-change-route [
+        let old-speed speed
+        let current-car self
+        face target
+        car-following
+
+
+      if speed <= old-speed  [
+        if old-speed - speed < 0.5[
+;          show "vai trocar a rota"
+          set can-change-route false
+          let best-speed-mean 0
+          ask nodes-on neighbors4 [
+            let path-speed-mean 0
+              foreach nw:turtles-on-path-to node-on-current-car-goal-path [ x ->
+              ifelse count cars-here > 0
+              [set path-speed-mean path-speed-mean + mean [speed] of cars-here]
+              [set path-speed-mean path-speed-mean + 1]
+
+              if path-speed-mean >= best-speed-mean[
+                set best-speed-mean path-speed-mean
+                set target self
+              ]
+            ]
+          ]
+        ]
+
+      ]
+    ]
       face target
       car-following
+      fd speed
+    set simulation-total-running-ticks simulation-total-running-ticks + 1
+    if speed = 0 [
+      set simulation-total-stopped-ticks simulation-total-stopped-ticks + 1
+    ]
     ask patch-here [
       if pcolor = red [
       set cars-walked-on-toll cars-walked-on-toll + 1
       ]
     ]
-      set speed-mean speed-mean + (mean [speed] of cars )
+    set speed-mean speed-mean +  mean [speed] of cars
       if  distance [ goal ] of self < 1 [
         die
       ]
@@ -269,20 +340,26 @@ to go
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [
-    show (speed-mean / num-cars)
-    stop
+;    print "ticks dos percursos dos carros"
+    print "["
+    print simulation-total-running-ticks
+    print ","
+;    print "ticks de carros parados"
+    print simulation-total-stopped-ticks
+    print "],"
+
+    setup
   ]
 
   tick
 
 end
 to-report is-new-hour
-  report ticks mod 60 = 0
+  report ticks mod 30 = 0
 end
 
 to car-following
   set-car-speed
-  fd speed
 end
 
 to set-car-speed  ;; turtle procedure
@@ -308,8 +385,8 @@ to set-speed [ delta-x delta-y ]
 end
 
 to slow-down
-  ifelse speed <= 0.1
-    [ set speed 0.1 ]
+  ifelse speed <= 0
+    [ set speed 0 ]
     [ set speed speed - acceleration ]
 end
 
@@ -345,21 +422,6 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
-
-SLIDER
-10
-45
-205
-78
-num-cars
-num-cars
-1
-400
-400.0
-1
-1
-NIL
-HORIZONTAL
 
 BUTTON
 220
@@ -407,92 +469,61 @@ hour-of-the-day
 11
 
 MONITOR
-45
-120
-162
-165
+40
+115
+157
+160
 cars-walked-on-toll
 cars-walked-on-toll
 17
 1
 11
 
+MONITOR
+10
+15
+182
+60
+simulation-total-stopped-ticks
+simulation-total-stopped-ticks
+17
+1
+11
+
 @#$#@#$#@
-## ACKNOWLEDGMENT
+## Reconhecimento
 
-This model is from Chapter Five of the book "Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo", by Uri Wilensky & William Rand.
+Modelo apresentado para matéria de Engenharia de Software Orientada a Agentes, desenvolvendo uma simução de transito utilizando postos de pedágio.
 
-* Wilensky, U. & Rand, W. (2015). Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo. Cambridge, MA. MIT Press.
+## O que é?
 
-This model is in the IABM Textbook folder of the NetLogo Models Library. The model, as well as any updates to the model, can also be found on the textbook website: http://www.intro-to-abm.com/.
+Um trafico de veiculos de uma cidade qualquer, a fim de identificar os congestionamentos das vias/ruas, assim para resolver esse problema, é definido pedágios em algumas ruas, para dissipar o congestionamento, pois com pedágio o custo para o motorista passa a ser maoior, dependendo do seu destino ele pode optar por trafegar em rotas alternativas.
 
-## ERRATA
+## Como funciona
+Os carros selecionam seu destino ao qual estão tentando chegar (trabalho ou casa etc..) e tentam avançar na velocidade atual pré definida. Se a velocidade atual for menor que o limite de velocidade(limite positivo) e não houver nenhum carro diretamente à sua frente, eles aceleram. Se houver um carro mais lento na frente deles, eles correspondem à velocidade do carro mais lento e desaceleram (utilizando a estratégia de car-following). 
 
-The code for this model differs somewhat from the code in the textbook. The textbook code calls the STAY procedure, which is not defined here. One of our suggestions in the "Extending the model" section below does, however, invite you to write a STAY procedure.
 
-## WHAT IS IT?
+## Como usar
 
-The Traffic Grid Goal model simulates traffic moving in a city grid. It allows you to control traffic lights and global variables, such as the speed limit and the number of cars, and explore traffic dynamics.
-
-This model extends the Traffic Grid model by giving the cars goals, namely to drive to and from work. It is the third in a series of traffic models that use different kinds of agent cognition. The agents in this model use goal-based cognition.
-
-## HOW IT WORKS
-
-Each time step, the cars face the next destination they are trying to get to (either work or home) and attempt to move forward at their current speed. If their current speed is less than the speed limit and there is no car directly in front of them, they accelerate. If there is a slower car in front of them, they match the speed of the slower car and decelerate. If there is a red light or a stopped car in front of them, they stop.
-
-Each car has a house patch and a work patch. (The house patch turns yellow and the work patch turns orange for a car that you are watching.) The cars will alternately drive from their home to work and then from their work to home.
-
-There are two different ways the lights can change. First, the user can change any light at any time by making the light current, and then clicking CHANGE LIGHT. Second, lights can change automatically, once per cycle. Initially, all lights will automatically change at the beginning of each cycle.
-
-## HOW TO USE IT
-
-Change the traffic grid (using the sliders GRID-SIZE-X and GRID-SIZE-Y) to make the desired number of lights. Change any other setting that you would like to change. Press the SETUP button.
-
-At this time, you may configure the lights however you like, with any combination of auto/manual and any phase. Changes to the state of the current light are made using the CURRENT-AUTO?, CURRENT-PHASE and CHANGE LIGHT controls. You may select the current intersection using the SELECT INTERSECTION control. See below for details.
-
-Start the simulation by pressing the GO button. You may continue to make changes to the lights while the simulation is running.
+Clique em Setup para definir o mundo/mapa
+Clique em GO para iniciar a simulação, para os veiculos andarem.
 
 ### Buttons
 
-SETUP -- generates a new traffic grid based on the current GRID-SIZE-X and GRID-SIZE-Y and NUM-CARS number of cars. Each car chooses a home and work location. All lights are set to auto, and all phases are set to 0%.
+SETUP -- Define os patches, ruas , pedágios, definido o mapa como um todo, e seu funcionamento.
 
-GO -- runs the simulation indefinitely. Cars travel from their homes to their work and back.
+GO -- Inicia a simulação, gerando os veiculos, que a partir disso definem suas rotas.
 
-CHANGE LIGHT -- changes the direction traffic may flow through the current light. A light can be changed manually even if it is operating in auto mode.
 
-SELECT INTERSECTION -- allows you to select a new "current" intersection. When this button is depressed, click in the intersection which you would like to make current. When you've selected an intersection, the "current" label will move to the new intersection and this button will automatically pop up.
 
-WATCH A CAR -- selects a car to watch. Sets the car's label to its goal. Displays the car's house in yellow and the car's work in orange. Opens inspectors for the watched car and its house and work.
-
-STOP WATCHING -- stops watching the watched car and resets its labels and house and work colors.
-
-### Sliders
-
-SPEED-LIMIT -- sets the maximum speed for the cars.
-
-NUM-CARS -- sets the number of cars in the simulation (you must press the SETUP button to see the change).
-
-TICKS-PER-CYCLE -- sets the number of ticks that will elapse for each cycle. This has no effect on manual lights. This allows you to increase or decrease the granularity with which lights can automatically change.
-
-GRID-SIZE-X -- sets the number of vertical roads there are (you must press the SETUP button to see the change).
-
-GRID-SIZE-Y -- sets the number of horizontal roads there are (you must press the SETUP button to see the change).
-
-CURRENT-PHASE -- controls when the current light changes, if it is in auto mode. The slider value represents the percentage of the way through each cycle at which the light should change. So, if the TICKS-PER-CYCLE is 20 and CURRENT-PHASE is 75%, the current light will switch at tick 15 of each cycle.
-
-### Switches
-
-POWER? -- toggles the presence of traffic lights.
-
-CURRENT-AUTO? -- toggles the current light between automatic mode, where it changes once per cycle (according to CURRENT-PHASE), and manual, in which you directly control it with CHANGE LIGHT.
 
 ### Plots
 
-STOPPED CARS -- displays the number of stopped cars over time.
+Hours of the day -- Apresenta o horário atual da simulação, assim simulando o horário da vida real.
 
-AVERAGE SPEED OF CARS -- displays the average speed of cars over time.
+simulation-total-stopped-ticks -- Quantidade de carroq a ponto de parar o carro (velocidade igual 0) esse input é incrementado.
 
-AVERAGE WAIT TIME OF CARS -- displays the average time cars are stopped over time.
+cars-walked-on-toll -- Quantidade de carros que passaram por um pedágio
 
 ## THINGS TO NOTICE
 

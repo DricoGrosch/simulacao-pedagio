@@ -491,93 +491,42 @@ simulation-total-stopped-ticks
 11
 
 @#$#@#$#@
-## ACKNOWLEDGMENT
+## Reconhecimento
 
-This model is from Chapter Five of the book "Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo", by Uri Wilensky & William Rand.
+Modelo apresentado para matéria de Engenharia de Software Orientada a Agentes, desenvolvendo uma simução de transito utilizando postos de pedágio.
 
-* Wilensky, U. & Rand, W. (2015). Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo. Cambridge, MA. MIT Press.
+## O que é?
 
-This model is in the IABM Textbook folder of the NetLogo Models Library. The model, as well as any updates to the model, can also be found on the textbook website: http://www.intro-to-abm.com/.
+Um trafico de veiculos de uma cidade qualquer, a fim de identificar os congestionamentos das vias/ruas, assim para resolver esse problema, é definido pedágios em algumas ruas, para dissipar o congestionamento, pois com pedágio o custo para o motorista passa a ser maoior, dependendo do seu destino ele pode optar por trafegar em rotas alternativas.
 
-## ERRATA
+## Como funciona
+Os carros selecionam seu destino ao qual estão tentando chegar (trabalho ou casa etc..) e tentam avançar na velocidade atual pré definida. Se a velocidade atual for menor que o limite de velocidade(limite positivo) e não houver nenhum carro diretamente à sua frente, eles aceleram. Se houver um carro mais lento na frente deles, eles correspondem à velocidade do carro mais lento e desaceleram (utilizando a estratégia de car-following). 
 
-The code for this model differs somewhat from the code in the textbook. The textbook code calls the STAY procedure, which is not defined here. One of our suggestions in the "Extending the model" section below does, however, invite you to write a STAY procedure.
 
-## WHAT IS IT?
+## Como usar
 
-The Traffic Grid Goal model simulates traffic moving in a city grid. It allows you to control traffic lights and global variables, such as the speed limit and the number of cars, and explore traffic dynamics.
-
-This model extends the Traffic Grid model by giving the cars goals, namely to drive to and from work. It is the third in a series of traffic models that use different kinds of agent cognition. The agents in this model use goal-based cognition.
-
-## HOW IT WORKS
-
-Each time step, the cars face the next destination they are trying to get to (either work or home) and attempt to move forward at their current speed. If their current speed is less than the speed limit and there is no car directly in front of them, they accelerate. If there is a slower car in front of them, they match the speed of the slower car and decelerate. If there is a red light or a stopped car in front of them, they stop.
-
-Each car has a house patch and a work patch. (The house patch turns yellow and the work patch turns orange for a car that you are watching.) The cars will alternately drive from their home to work and then from their work to home.
-
-There are two different ways the lights can change. First, the user can change any light at any time by making the light current, and then clicking CHANGE LIGHT. Second, lights can change automatically, once per cycle. Initially, all lights will automatically change at the beginning of each cycle.
-
-## HOW TO USE IT
-
-Change the traffic grid (using the sliders GRID-SIZE-X and GRID-SIZE-Y) to make the desired number of lights. Change any other setting that you would like to change. Press the SETUP button.
-
-At this time, you may configure the lights however you like, with any combination of auto/manual and any phase. Changes to the state of the current light are made using the CURRENT-AUTO?, CURRENT-PHASE and CHANGE LIGHT controls. You may select the current intersection using the SELECT INTERSECTION control. See below for details.
-
-Start the simulation by pressing the GO button. You may continue to make changes to the lights while the simulation is running.
+Clique em Setup para definir o mundo/mapa
+Clique em GO para iniciar a simulação, para os veiculos andarem.
 
 ### Buttons
 
-SETUP -- generates a new traffic grid based on the current GRID-SIZE-X and GRID-SIZE-Y and NUM-CARS number of cars. Each car chooses a home and work location. All lights are set to auto, and all phases are set to 0%.
+SETUP -- Define os patches, ruas , pedágios, definido o mapa como um todo, e seu funcionamento.
 
-GO -- runs the simulation indefinitely. Cars travel from their homes to their work and back.
+GO -- Inicia a simulação, gerando os veiculos, que a partir disso definem suas rotas.
 
-CHANGE LIGHT -- changes the direction traffic may flow through the current light. A light can be changed manually even if it is operating in auto mode.
 
-SELECT INTERSECTION -- allows you to select a new "current" intersection. When this button is depressed, click in the intersection which you would like to make current. When you've selected an intersection, the "current" label will move to the new intersection and this button will automatically pop up.
 
-WATCH A CAR -- selects a car to watch. Sets the car's label to its goal. Displays the car's house in yellow and the car's work in orange. Opens inspectors for the watched car and its house and work.
-
-STOP WATCHING -- stops watching the watched car and resets its labels and house and work colors.
-
-### Sliders
-
-SPEED-LIMIT -- sets the maximum speed for the cars.
-
-NUM-CARS -- sets the number of cars in the simulation (you must press the SETUP button to see the change).
-
-TICKS-PER-CYCLE -- sets the number of ticks that will elapse for each cycle. This has no effect on manual lights. This allows you to increase or decrease the granularity with which lights can automatically change.
-
-GRID-SIZE-X -- sets the number of vertical roads there are (you must press the SETUP button to see the change).
-
-GRID-SIZE-Y -- sets the number of horizontal roads there are (you must press the SETUP button to see the change).
-
-CURRENT-PHASE -- controls when the current light changes, if it is in auto mode. The slider value represents the percentage of the way through each cycle at which the light should change. So, if the TICKS-PER-CYCLE is 20 and CURRENT-PHASE is 75%, the current light will switch at tick 15 of each cycle.
-
-### Switches
-
-POWER? -- toggles the presence of traffic lights.
-
-CURRENT-AUTO? -- toggles the current light between automatic mode, where it changes once per cycle (according to CURRENT-PHASE), and manual, in which you directly control it with CHANGE LIGHT.
 
 ### Plots
 
-STOPPED CARS -- displays the number of stopped cars over time.
+Hours of the day -- Apresenta o horário atual da simulação, assim simulando o horário da vida real.
 
-AVERAGE SPEED OF CARS -- displays the average speed of cars over time.
+simulation-total-stopped-ticks -- Quantidade de carroq que freiaram a ponto de parar o carro (velocidade igual 0) esse input é incrementado.
 
-AVERAGE WAIT TIME OF CARS -- displays the average time cars are stopped over time.
+cars-walked-on-toll -- Quantidade de carros que passaram por um pedágio
 
-## THINGS TO NOTICE
 
-How is this model different than the Traffic Grid model? The one thing you may see at first glance is that cars move in all directions instead of only left to right and top to bottom. You will probably agree that this looks much more realistic.
 
-Another thing to notice is that, sometimes, cars get stuck: as explained in the book this is because the cars are mesuring the distance to their goals "as the bird flies", but reaching the goal sometimes require temporarily moving further from it (to get around a corner, for instance). A good way to witness that is to try the WATCH A CAR button until you find a car that is stuck. This situation could be prevented if the agents were more cognitively sophisticated. Do you think that it could also be avoided if the streets were layed out in a pattern different from the current one?
-
-## THINGS TO TRY
-
-You can change the "granularity" of the grid by using the GRID-SIZE-X and GRID-SIZE-Y sliders. Do cars get stuck more often with bigger values for GRID-SIZE-X and GRID-SIZE-Y, resulting in more streets, or smaller values, resulting in less streets? What if you use a big value for X and a small value for Y?
-
-In the original Traffic Grid model from the model library, removing the traffic lights (by setting the POWER? switch to Off) quickly resulted in gridlock. Try it in this version of the model. Do you see a gridlock happening? Why do you think that is? Do you think it is more realistic than in the original model?
 
 ## EXTENDING THE MODEL
 
