@@ -145,13 +145,16 @@ to setup-patches
 
 end
 to setup-tolls
-   ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
- ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-  ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
-  ask patches with [  pxcor = -1 and pycor = 7 ] [set-toll]
-  ask patches with [  pxcor = 7 and pycor = 1 ] [set-toll]
 
+;    ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
+   ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
+   ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
+;   ask patches with [  pxcor = -1 and pycor = 7 ] [set-toll]
+;   ask patches with [  pxcor = 7 and pycor = 1 ] [set-toll]
 
+;  ask n-of 2 roads  [
+;    set-toll
+;  ]
 end
 to set-toll
    set pcolor red
@@ -237,9 +240,9 @@ to start-new-demand
   if hour-of-the-day <= 18[
 
 
-    let cars-to-spawn (random-float 1 + 0.1 ) * 100
+    let cars-to-spawn 100
     if hour-of-the-day > 11 and hour-of-the-day < 15[
-    set cars-to-spawn cars-to-spawn * 4
+    set cars-to-spawn cars-to-spawn * 2
     ]
     set total-cars-spawned total-cars-spawned + cars-to-spawn
     create-cars cars-to-spawn [
@@ -328,9 +331,9 @@ to go
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [
-    show "---------------"
-    show (speed-mean / total-cars-spawned)
-    stop
+
+    print (speed-mean / total-cars-spawned)
+    setup
   ]
 
   tick
@@ -368,8 +371,8 @@ to set-speed [ delta-x delta-y ]
 end
 
 to slow-down
-  ifelse speed <= 0.1
-    [ set speed 0.1 ]
+  ifelse speed <= 0
+    [ set speed 0 ]
     [ set speed speed - acceleration ]
 end
 
