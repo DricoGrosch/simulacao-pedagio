@@ -149,14 +149,20 @@ end
 to setup-tolls
 
 ;    ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
-   ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-   ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
+;   ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
+;   ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
 ;   ask patches with [  pxcor = -1 and pycor = 7 ] [set-toll]
 ;   ask patches with [  pxcor = 7 and pycor = 1 ] [set-toll]
+;    ask patches with [  pxcor = -12 and pycor = 4 ] [set-toll]
+
+;      ask patches with [  pxcor = -12 and pycor = 8 ] [set-toll]
+;  ask patches with [  pxcor = 15 and pycor = -11 ] [set-toll]
+
 
 ;  ask n-of 2 roads  [
 ;    set-toll
 ;  ]
+
 end
 to set-toll
    set pcolor red
