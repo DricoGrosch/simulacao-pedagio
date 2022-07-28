@@ -141,8 +141,8 @@ to setup-patches
 
   ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
   ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-;  ask patches with [  pxcor = 0 and pycor = 7 ] [set-toll]
-;  ask patches with [  pxcor = -1 and pycor = 13 ] [set-toll]
+  ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
+  ask patches with [  pxcor = -1 and pycor = 7 ] [set-toll]
 ;  ask patches with [  pxcor = -7 and pycor = -18 ] [set-toll]
 ;
 
@@ -153,7 +153,7 @@ to set-toll
    set pcolor red
       ask nodes-here [
         ask my-links [
-          set weight 10
+          set weight 5
         ]
       ]
 end
@@ -222,9 +222,12 @@ end
 to start-new-demand
   set hour-of-the-day hour-of-the-day + 1
   set spawned-cars 0
-  create-demand-routes
+
   if hour-of-the-day <= 18[
-    create-cars num-cars [
+    let cars-to-spawn (random-float 1 + 0.1 ) * 100
+    show cars-to-spawn
+    create-cars cars-to-spawn [
+      create-demand-routes
       set can-change-route true
       let route one-of demand-routes
       setup-cars
@@ -236,9 +239,9 @@ to start-new-demand
       set shape "car"
       set spawned-cars spawned-cars + 1
       set speed-capacity random-float 0.7 + 0.3
-      create-link-with goal [
-        set color red
-      ]
+;      create-link-with goal [
+;        set color red
+;      ]
     ]
  ]
 
@@ -248,6 +251,7 @@ to go
 
   if is-new-hour[
     start-new-demand
+    set speed-mean speed-mean + (mean [speed] of cars )
   ]
 
   ask cars [
@@ -300,7 +304,7 @@ to go
       set cars-walked-on-toll cars-walked-on-toll + 1
       ]
     ]
-      set speed-mean speed-mean + (mean [speed] of cars )
+
       if  distance [ goal ] of self < 1 [
         die
       ]
@@ -308,7 +312,7 @@ to go
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [
-    show (speed-mean / num-cars)
+    show (speed-mean )
     stop
   ]
 
@@ -384,21 +388,6 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
-
-SLIDER
-10
-45
-205
-78
-num-cars
-num-cars
-1
-400
-400.0
-1
-1
-NIL
-HORIZONTAL
 
 BUTTON
 220
