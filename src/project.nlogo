@@ -14,6 +14,7 @@ globals
   must-end-simulation
   speed-mean
   cars-walked-on-toll
+  total-cars-spawned
 ]
 
 
@@ -59,6 +60,7 @@ to setup-globals
   set acceleration 0.099
   set must-end-simulation false
   set cars-walked-on-toll 0
+  set total-cars-spawned 0
 end
 
 
@@ -138,17 +140,19 @@ to setup-patches
   ]
 
   setup-intersections
-
-  ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
-  ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
-  ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
-  ask patches with [  pxcor = -1 and pycor = 7 ] [set-toll]
-;  ask patches with [  pxcor = -7 and pycor = -18 ] [set-toll]
-;
+  setup-tolls
 
 
 end
+to setup-tolls
+   ask patches with [  pxcor = -1 and pycor = -11 ] [set-toll]
+ ask patches with [  pxcor = -1 and pycor = -5 ] [set-toll]
+  ask patches with [  pxcor = -1 and pycor = 1 ] [set-toll]
+  ask patches with [  pxcor = -1 and pycor = 7 ] [set-toll]
+  ask patches with [  pxcor = 7 and pycor = 1 ] [set-toll]
 
+
+end
 to set-toll
    set pcolor red
       ask nodes-here [
@@ -159,33 +163,40 @@ to set-toll
 end
 to setup-intersections
   let index 1
-  ask patches with [pcolor = white and pxcor = min-pxcor][
-  sprout-intersections 1 [
+  let intersection-patches roads with [
+    (floor ((pxcor + max-pxcor - floor (grid-x-inc - 1)) mod grid-x-inc) = 0) and
+    (floor ((pycor + max-pycor) mod grid-y-inc) = 0)
+  ]
+  foreach sort intersection-patches[intersection-patch ->
+    ask intersection-patch  [
+      sprout-intersections 1 [
         set size 1
         set index index + 1
         set id index
-          set shape "circle"
+        set shape "circle"
       ]
-      ]
-;  ask patches with [pcolor = white and pycor = max-pxcor][
-;  sprout-intersections 1 [
-;        set size 1
-;        set index index + 1
-;        set id index
-;          set shape "circle"
-;      ]
-;      ]
+    ]
+  ]
 
-
-  ask patches with [  pxcor = max-pxcor and floor(pycor mod grid-y-inc )= 0 ] [
-   sprout-intersections 1 [
-        set size 1
-        set index index + 1
-        set id index
-          set shape "circle"
-      ]
+  ask intersections [
+    if (list pxcor pycor) = (list -4 1)
+    or (list pxcor pycor) = (list -4 -5)
+    or (list pxcor pycor) = (list -4 -11)
+    or (list pxcor pycor) = (list -4 -18)
+    or (list pxcor pycor) = (list -4 7)
+    or (list pxcor pycor) = (list 3 7)
+    or (list pxcor pycor) = (list 11 -5)
+    or (list pxcor pycor) = (list 11 -11)
+    or (list pxcor pycor) = (list 11 -18)
+    or (list pxcor pycor) = (list 3 13)
+    or (list pxcor pycor) = (list -4 13)
+    or (list pxcor pycor) = (list 3 1)
+    [
+      die
+    ]
 
   ]
+
 
 end
 
@@ -224,8 +235,13 @@ to start-new-demand
   set spawned-cars 0
 
   if hour-of-the-day <= 18[
+
+
     let cars-to-spawn (random-float 1 + 0.1 ) * 100
-    show cars-to-spawn
+    if hour-of-the-day > 11 and hour-of-the-day < 15[
+    set cars-to-spawn cars-to-spawn * 4
+    ]
+    set total-cars-spawned total-cars-spawned + cars-to-spawn
     create-cars cars-to-spawn [
       create-demand-routes
       set can-change-route true
@@ -251,7 +267,7 @@ to go
 
   if is-new-hour[
     start-new-demand
-    set speed-mean speed-mean + (mean [speed] of cars )
+
   ]
 
   ask cars [
@@ -304,7 +320,7 @@ to go
       set cars-walked-on-toll cars-walked-on-toll + 1
       ]
     ]
-
+    set speed-mean speed-mean +  mean [speed] of cars
       if  distance [ goal ] of self < 1 [
         die
       ]
@@ -312,7 +328,8 @@ to go
   ]
   if count cars = 0 and hour-of-the-day > 18 [set must-end-simulation true]
   if must-end-simulation [
-    show (speed-mean )
+    show "---------------"
+    show (speed-mean / total-cars-spawned)
     stop
   ]
 
@@ -320,7 +337,7 @@ to go
 
 end
 to-report is-new-hour
-  report ticks mod 60 = 0
+  report ticks mod 30 = 0
 end
 
 to car-following
